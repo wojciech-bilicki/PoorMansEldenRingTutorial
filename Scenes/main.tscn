@@ -1,0 +1,36 @@
+[gd_scene load_steps=6 format=3 uid="uid://dbguvp3lmogbt"]
+
+[ext_resource type="PackedScene" uid="uid://mny5fvat35bl" path="res://Scenes/player.tscn" id="1_vmu52"]
+
+[sub_resource type="Environment" id="Environment_s76pt"]
+sdfgi_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gft63"]
+albedo_color = Color(0.505882, 0.505882, 0.505882, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v0b4m"]
+size = Vector3(50, 1, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wdm8h"]
+size = Vector3(50, 1, 50)
+
+[node name="main" type="Node"]
+
+[node name="Player" parent="." instance=ExtResource("1_vmu52")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.817183, -0.398737, 0.416198, 0.408218, 0.109382, 0.906308, -0.406903, 0.910519, 0.0733869, -105, 376, 60)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_s76pt")
+
+[node name="Floor" type="StaticBody3D" parent="."]
+collision_layer = 2
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+material_override = SubResource("StandardMaterial3D_gft63")
+mesh = SubResource("BoxMesh_v0b4m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_wdm8h")
