@@ -11,18 +11,23 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 var input: Vector2
 var current_velocity: Vector2
-var current_state_playback_path
 var jump_queued = false
 var falling = false
+var is_dodging
 
 #exports
-@export var move_speed = 30
+@export var move_speed = 15
 @export var acceleration = 15
 @export var locomotion_animation_transition_speed = 0.15
 @export var direction_change_factor = 5
+@export var current_state_playback_path: String
 @export var movement_mode: MovementMode = MovementMode.UNFOCUSED
-@export var focused_locomotion_state_playback_path: String
-@export var unfocused_locomotion_state_playback_path: String
+
+@export_group("Dodge Params")
+@export var dodge_velocity = 25 
+@export var dodge_back_velocity = 20
+@export_group("")
+
 @export var jump_force = 150
 
 #node references 
@@ -34,9 +39,17 @@ func _ready():
 	switch_movement_mode()
 
 func switch_movement_mode():
+	var enabled_parameter = "parameters/Locomotion/conditions/is_focused_animation_on" if movement_mode == MovementMode.FOCUSED else "parameters/Locomotion/conditions/is_unfocused_animation_on"
+	var disabled_parameter = "parameters/Locomotion/conditions/is_unfocused_animation_on" if movement_mode == MovementMode.FOCUSED else "parameters/Locomotion/conditions/is_focused_animation_on"
 	var transition = "focused" if movement_mode == MovementMode.FOCUSED else "unfocused"
-	current_state_playback_path = focused_locomotion_state_playback_path if movement_mode == MovementMode.FOCUSED else unfocused_locomotion_state_playback_path
-	animation_tree.set("parameters/Transition/transition_request", transition)
+	
+	animation_tree.set(enabled_parameter, true)
+	animation_tree.set(disabled_parameter, false)
+	
+	var playback = animation_tree.get(current_state_playback_path) as AnimationNodeStateMachinePlayback
+	var travel_name = "Unfocused_Locomotion" if movement_mode == MovementMode.UNFOCUSED else "Focused_Locomotion"
+
+	playback.travel(travel_name)
 
 func _process(delta):
 	var velocityDelta = (input - current_velocity)
@@ -49,9 +62,9 @@ func _process(delta):
 
 	if movement_mode == MovementMode.UNFOCUSED:
 		var velocity_value = maxf(absf(animation_velocity.x), absf(animation_velocity.y))
-		animation_tree.set("parameters/UnfocusedLocomotionStateMachine/UnfocusedLocomotion/blend_position", velocity_value)
+		animation_tree.set("parameters/Locomotion/Unfocused_Locomotion/blend_position", velocity_value)
 	else:
-		animation_tree.set("parameters/FocusedLocomotionStateMachine/BlendSpace2D/blend_position", animation_velocity)
+		animation_tree.set("parameters/Locomotion/Focused_Locomotion/blend_position", animation_velocity)
 	
 func _physics_process(delta):
 	move_and_slide()
@@ -82,15 +95,23 @@ func handle_jumping():
 		falling = true		
 
 func handle_rotation(delta):
-	if movement_mode == MovementMode.UNFOCUSED && velocity.length() > 0.01:
+	
+	if is_dodging:
+		return
+	
+	if movement_mode == MovementMode.UNFOCUSED && velocity.length() > 0.01 && is_on_floor():
 		rig.rotation.y = lerp_angle(rig.rotation.y, -atan2(velocity.x, -velocity.z), delta * direction_change_factor)
 	elif velocity.length() > 0.01 && movement_mode == MovementMode.FOCUSED:
 		rig.rotation.y = lerp_angle(rig.rotation.y, spring_arm_3d.rotation.y, delta * direction_change_factor)
 		
 func get_input(delta):
+	if is_dodging:
+		return
 	var vy = velocity.y
 	velocity.y = 0
 	input = Input.get_vector("left", "right", "forward", "back")
+	#if input != Vector2.ZERO:
+		#print_debug(input)
 	var dir = Vector3(input.x, 0, input.y).rotated(Vector3.UP, spring_arm_3d.rotation.y)
 	velocity = lerp(velocity, move_speed * dir, delta * acceleration) 
 	velocity.y = vy
@@ -101,10 +122,51 @@ func _input(event):
 		switch_movement_mode()
 	if Input.is_action_just_pressed("jump"):
 		begin_jump()
+	if Input.is_action_just_pressed("dodge"):
+		var movement_input =  Input.get_vector("left", "right", "forward", "back")
+		print_debug(movement_input)
+		dodge(movement_input)
+		
 
 func begin_jump():
 	var playback = animation_tree.get(current_state_playback_path)
 	playback.travel("Jump_Start")
+	print_debug("begin_jump")
 
 func apply_jump_velocity():
+	print_debug("apply_jump_velocity")
 	jump_queued = true
+
+
+func dodge(dir: Vector2):
+	is_dodging = true
+	var playback = animation_tree.get(current_state_playback_path)
+	if movement_mode == MovementMode.UNFOCUSED:
+		if dir == Vector2.ZERO:
+			velocity = rig.transform.basis.z * dodge_back_velocity
+			playback.travel("Dodge_Backward")
+		else:
+			velocity = -rig.transform.basis.z * dodge_velocity
+			playback.travel("Dodge_Forward")
+	else: 
+		
+		if dir == Vector2.ZERO:
+			velocity = rig.transform.basis.z * dodge_back_velocity
+			playback.travel("Dodge_Backward")
+		elif dir == Vector2.LEFT:
+			velocity = -rig.transform.basis.x * dodge_velocity
+			playback.travel("Dodge_Left")
+		elif dir == Vector2.RIGHT:
+			velocity = rig.transform.basis.x * dodge_velocity
+			playback.travel("Dodge_Right")
+		elif dir == Vector2.DOWN:
+			
+			playback.travel("Dodge_Backward")
+			velocity = rig.transform.basis.z * dodge_velocity
+		elif dir == Vector2.UP:
+			playback.travel("Dodge_Forward")
+			velocity = -rig.transform.basis.z * dodge_velocity
+	
+func finish_dodge():
+	is_dodging = false
+	velocity = Vector3.ZERO
