@@ -34,6 +34,7 @@ var is_dodging
 @onready var spring_arm_3d = $SpringArm3D
 @onready var animation_tree = $AnimationTree
 @onready var rig = $Rig
+@onready var interaction_handler = $InteractionHandler
 
 func _ready():
 	switch_movement_mode()

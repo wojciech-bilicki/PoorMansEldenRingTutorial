@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="Item" load_steps=3 format=3 uid="uid://dd1uuknfypedd"]
+
+[ext_resource type="PackedScene" uid="uid://cheno7mfk4akg" path="res://Assets/Assets/gltf/sword_1handed.gltf" id="1_wddpg"]
+[ext_resource type="Script" path="res://Resources/item.gd" id="2_r1nva"]
+
+[resource]
+script = ExtResource("2_r1nva")
+name = "One Handed Sword"
+mesh = ExtResource("1_wddpg")

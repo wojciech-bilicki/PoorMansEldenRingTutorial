@@ -1,7 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://dbguvp3lmogbt"]
+[gd_scene load_steps=10 format=3 uid="uid://dbguvp3lmogbt"]
 
 [ext_resource type="PackedScene" uid="uid://mny5fvat35bl" path="res://Scenes/player.tscn" id="1_vmu52"]
 [ext_resource type="Shader" path="res://Shaders/grid.gdshader" id="2_0fnxo"]
+[ext_resource type="PackedScene" uid="uid://cwjr7mdirx3la" path="res://Scenes/item_orb.tscn" id="3_xi6bf"]
+[ext_resource type="Resource" uid="uid://mbhob3qapbo7" path="res://Resources/shield.tres" id="4_njg50"]
+[ext_resource type="Resource" uid="uid://dd1uuknfypedd" path="res://Resources/one_handed_sword.tres" id="5_q0cbp"]
 
 [sub_resource type="Environment" id="Environment_s76pt"]
 sdfgi_enabled = true
@@ -41,3 +44,13 @@ mesh = SubResource("BoxMesh_v0b4m")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
 shape = SubResource("BoxShape3D_wdm8h")
+
+[node name="ItemOrb" parent="." instance=ExtResource("3_xi6bf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.11566, -4.48871)
+color = Color(0, 0.517647, 0, 1)
+item = ExtResource("4_njg50")
+
+[node name="ItemOrb2" parent="." instance=ExtResource("3_xi6bf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.78778, 2.11566, -3.9718)
+color = Color(0.635294, 0, 0.247059, 1)
+item = ExtResource("5_q0cbp")
