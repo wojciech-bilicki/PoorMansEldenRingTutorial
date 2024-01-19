@@ -1,9 +1,13 @@
-[gd_resource type="Resource" script_class="Item" load_steps=3 format=3 uid="uid://dd1uuknfypedd"]
+[gd_resource type="Resource" script_class="Item" load_steps=4 format=3 uid="uid://dd1uuknfypedd"]
 
-[ext_resource type="PackedScene" uid="uid://cheno7mfk4akg" path="res://Assets/Assets/gltf/sword_1handed.gltf" id="1_wddpg"]
+[ext_resource type="Texture2D" uid="uid://bypg53xdiwjjc" path="res://Assets/Inventory/SwordOneHanded.png" id="1_6334g"]
+[ext_resource type="ArrayMesh" uid="uid://ckktohvksbdwd" path="res://Scenes/sword.mesh" id="2_hr18m"]
 [ext_resource type="Script" path="res://Resources/item.gd" id="2_r1nva"]
 
 [resource]
 script = ExtResource("2_r1nva")
 name = "One Handed Sword"
-mesh = ExtResource("1_wddpg")
+mesh = ExtResource("2_hr18m")
+image = ExtResource("1_6334g")
+inventory_slot = 0
+bone_attachment_name = "1H_Sword"

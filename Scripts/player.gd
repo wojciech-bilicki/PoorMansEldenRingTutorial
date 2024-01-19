@@ -13,6 +13,7 @@ var input: Vector2
 var current_velocity: Vector2
 var jump_queued = false
 var falling = false
+var process_input = true
 var is_dodging
 
 #exports
@@ -35,9 +36,12 @@ var is_dodging
 @onready var animation_tree = $AnimationTree
 @onready var rig = $Rig
 @onready var interaction_handler = $InteractionHandler
+@onready var inventory_ui = $InventoryUI as InventoryUI
+
 
 func _ready():
 	switch_movement_mode()
+	inventory_ui.inventory_toggled.connect(on_inventory_toggled)
 
 func switch_movement_mode():
 	var enabled_parameter = "parameters/Locomotion/conditions/is_focused_animation_on" if movement_mode == MovementMode.FOCUSED else "parameters/Locomotion/conditions/is_unfocused_animation_on"
@@ -53,6 +57,8 @@ func switch_movement_mode():
 	playback.travel(travel_name)
 
 func _process(delta):
+	if !process_input:
+		return
 	var velocityDelta = (input - current_velocity)
 	if velocityDelta.length() > locomotion_animation_transition_speed:
 		velocityDelta = velocityDelta.normalized() * locomotion_animation_transition_speed
@@ -60,7 +66,10 @@ func _process(delta):
 	current_velocity += velocityDelta
 	var animation_velocity = current_velocity
 	animation_velocity.y *= -1
+	set_animation_blend_position(animation_velocity)
 
+
+func set_animation_blend_position(animation_velocity: Vector2):	
 	if movement_mode == MovementMode.UNFOCUSED:
 		var velocity_value = maxf(absf(animation_velocity.x), absf(animation_velocity.y))
 		animation_tree.set("parameters/Locomotion/Unfocused_Locomotion/blend_position", velocity_value)
@@ -68,6 +77,8 @@ func _process(delta):
 		animation_tree.set("parameters/Locomotion/Focused_Locomotion/blend_position", animation_velocity)
 	
 func _physics_process(delta):
+	if !process_input:
+		return
 	move_and_slide()
 
 	get_input(delta)
@@ -111,13 +122,14 @@ func get_input(delta):
 	var vy = velocity.y
 	velocity.y = 0
 	input = Input.get_vector("left", "right", "forward", "back")
-	#if input != Vector2.ZERO:
-		#print_debug(input)
+
 	var dir = Vector3(input.x, 0, input.y).rotated(Vector3.UP, spring_arm_3d.rotation.y)
 	velocity = lerp(velocity, move_speed * dir, delta * acceleration) 
 	velocity.y = vy
 
 func _input(event):
+	if !process_input:
+		return
 	if Input.is_action_just_pressed("focus"):
 		movement_mode = MovementMode.FOCUSED if movement_mode == MovementMode.UNFOCUSED else MovementMode.UNFOCUSED
 		switch_movement_mode()
@@ -125,14 +137,12 @@ func _input(event):
 		begin_jump()
 	if Input.is_action_just_pressed("dodge"):
 		var movement_input =  Input.get_vector("left", "right", "forward", "back")
-		print_debug(movement_input)
 		dodge(movement_input)
 		
 
 func begin_jump():
 	var playback = animation_tree.get(current_state_playback_path)
 	playback.travel("Jump_Start")
-	print_debug("begin_jump")
 
 func apply_jump_velocity():
 	print_debug("apply_jump_velocity")
@@ -171,3 +181,9 @@ func dodge(dir: Vector2):
 func finish_dodge():
 	is_dodging = false
 	velocity = Vector3.ZERO
+
+func on_inventory_toggled(is_shown: bool):
+	
+	process_input = !is_shown
+	velocity = Vector3.ZERO
+	set_animation_blend_position(Vector2.ZERO)

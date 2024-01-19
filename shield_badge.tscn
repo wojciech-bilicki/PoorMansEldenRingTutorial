@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqs4rhmgkih58"]
+
+[ext_resource type="ArrayMesh" uid="uid://f7j77dpmlrap" path="res://Assets/shield_badge.mesh" id="1_ruatk"]
+
+[node name="shield_badge" type="Node3D"]
+
+[node name="shield_badge2" type="MeshInstance3D" parent="."]
+mesh = ExtResource("1_ruatk")
+skeleton = NodePath("")

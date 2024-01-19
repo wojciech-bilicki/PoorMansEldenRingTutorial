@@ -1,6 +1,6 @@
 extends Node
 
-class_name InputMaanger
+class_name InputManager
 
 @onready var inventory_ui = $"../InventoryUI" as InventoryUI
 
